@@ -6,13 +6,16 @@ import RoteirosPage from './pages/RoteirosPage';
 import CasosPage from './pages/CasosPage';
 import ExecucoesPage from './pages/ExecucoesPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
   { to: '/clientes', label: 'Clientes' },
   { to: '/roteiros', label: 'Roteiros' },
   { to: '/casos', label: 'Casos' },
-  { to: '/execucoes', label: 'Execuções' }
+  { to: '/execucoes', label: 'Execuções' },
+  { to: '/perfil', label: 'Perfil' }
 ];
 
 function ProtectedRoute({ children }) {
@@ -46,11 +49,13 @@ function App() {
       <main className="main-panel">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/clientes" element={<ProtectedRoute><ClientesPage /></ProtectedRoute>} />
           <Route path="/roteiros" element={<ProtectedRoute><RoteirosPage /></ProtectedRoute>} />
           <Route path="/casos" element={<ProtectedRoute><CasosPage /></ProtectedRoute>} />
           <Route path="/execucoes" element={<ProtectedRoute><ExecucoesPage /></ProtectedRoute>} />
+          <Route path="/perfil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

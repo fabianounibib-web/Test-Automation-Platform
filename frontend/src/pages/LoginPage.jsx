@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { login as loginRequest } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,9 +14,10 @@ function LoginPage() {
     try {
       const result = await loginRequest(form);
       login(result.user, result.access_token);
+      setError('');
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Não foi possível entrar. Verifique suas credenciais.');
     }
   }
 
@@ -31,6 +32,9 @@ function LoginPage() {
           <button type="submit">Entrar</button>
         </form>
         {error && <p style={{ color: '#dc2626' }}>{error}</p>}
+        <p style={{ marginTop: '0.8rem' }}>
+          Não tem conta? <Link to="/register">Criar conta</Link>
+        </p>
       </div>
     </div>
   );

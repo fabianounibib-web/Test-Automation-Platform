@@ -27,7 +27,13 @@ function App() {
   const { user, logout } = useAuth();
 
   if (!user) {
-    return <LoginPage />;
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
   }
 
   return (
@@ -48,14 +54,13 @@ function App() {
 
       <main className="main-panel">
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/clientes" element={<ProtectedRoute><ClientesPage /></ProtectedRoute>} />
           <Route path="/roteiros" element={<ProtectedRoute><RoteirosPage /></ProtectedRoute>} />
           <Route path="/casos" element={<ProtectedRoute><CasosPage /></ProtectedRoute>} />
           <Route path="/execucoes" element={<ProtectedRoute><ExecucoesPage /></ProtectedRoute>} />
           <Route path="/perfil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>

@@ -11,6 +11,9 @@ def execute_case_task(caso_id):
     if not caso:
         return {'error': 'caso not found'}
 
+    caso.status = 'running'
+    db.session.add(caso)
+
     execucao = Execucao(caso_teste_id=caso.id, inicio=datetime.utcnow(), status='running')
     db.session.add(execucao)
     db.session.commit()
@@ -20,6 +23,7 @@ def execute_case_task(caso_id):
         # result expected: {'success': bool, 'logs': [...], 'evidencias': [...]}
         success = result.get('success', False)
         execucao.status = 'success' if success else 'failed'
+        caso.status = 'executado com sucesso' if success else 'executado com erro'
         execucao.fim = datetime.utcnow()
         execucao.tempo = (execucao.fim - execucao.inicio).total_seconds()
         db.session.commit()
@@ -35,6 +39,7 @@ def execute_case_task(caso_id):
         db.session.commit()
     except Exception as exc:
         execucao.status = 'error'
+        caso.status = 'executado com erro'
         execucao.fim = datetime.utcnow()
         execucao.tempo = (execucao.fim - execucao.inicio).total_seconds()
         db.session.commit()

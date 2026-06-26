@@ -1,9 +1,11 @@
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
 from app.config import Config
+
 
 db = SQLAlchemy()
 jwt = JWTManager()
@@ -13,11 +15,18 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['EVIDENCIAS_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['LOGS_FOLDER'], exist_ok=True)
+
     db.init_app(app)
     jwt.init_app(app)
     CORS(app)
 
-    # register blueprints (import locally to avoid circular imports)
+    with app.app_context():
+        from app.database import models  # noqa: F401
+        db.create_all()
+
     try:
         from app.auth.routes import auth_bp
         from app.clientes.routes import clientes_bp

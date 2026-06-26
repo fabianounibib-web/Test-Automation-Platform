@@ -45,6 +45,23 @@ services:
         condition: service_healthy
     command: sh -c "python run.py"
 
+  worker:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rpa_platform
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: change-this-in-production
+      JWT_SECRET_KEY: change-this-jwt-secret-in-production
+    volumes:
+      - ./backend:/app
+      - ./storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: sh -c "celery -A app.celery_app.celery worker --loglevel=info"
+
   nginx:
     image: nginx:alpine
     ports:
@@ -56,3 +73,5 @@ services:
 
 volumes:
   postgres_data:
+
+  worker_data:

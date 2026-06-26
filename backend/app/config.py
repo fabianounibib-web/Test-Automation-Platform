@@ -14,3 +14,5 @@ class Config:
     EVIDENCIAS_FOLDER = os.getenv('EVIDENCIAS_FOLDER', '/app/storage/evidencias')
     LOGS_FOLDER = os.getenv('LOGS_FOLDER', '/app/storage/logs')
     MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 16777216))
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+    RPA_API_URL = os.getenv('RPA_API_URL', 'http://rpa:8000/execute')

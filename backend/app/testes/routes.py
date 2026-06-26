@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from app.tasks.execute_case import execute_case_task
 
 testes_bp = Blueprint('testes', __name__)
 
@@ -10,5 +11,6 @@ def get_casos():
 
 @testes_bp.route('/<int:id>/executar', methods=['POST'])
 def executar_caso(id):
-    # placeholder to trigger execution
-    return jsonify({'msg': f'executar caso {id} not implemented'}), 202
+    # enqueue task via Celery
+    task = execute_case_task.delay(id)
+    return jsonify({'task_id': task.id}), 202

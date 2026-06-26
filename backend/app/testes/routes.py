@@ -1,7 +1,6 @@
 from flask import Blueprint, jsonify
 from app import db
 from app.database.models import CasoTeste
-from app.tasks.execute_case import execute_case_task
 
 testes_bp = Blueprint('testes', __name__)
 
@@ -23,6 +22,8 @@ def get_casos():
 
 @testes_bp.route('/<int:id>/executar', methods=['POST'])
 def executar_caso(id):
+    from app.tasks.execute_case import execute_case_task
+
     caso = CasoTeste.query.get(id)
     if not caso:
         return jsonify({'error': 'caso não encontrado'}), 404

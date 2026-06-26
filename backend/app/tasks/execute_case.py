@@ -20,7 +20,6 @@ def execute_case_task(caso_id):
 
     try:
         result = rpa_execute(caso, execucao.id)
-        # result expected: {'success': bool, 'logs': [...], 'evidencias': [...]}
         success = result.get('success', False)
         execucao.status = 'success' if success else 'failed'
         caso.status = 'executado com sucesso' if success else 'executado com erro'
@@ -29,12 +28,13 @@ def execute_case_task(caso_id):
         db.session.commit()
 
         for l in result.get('logs', []):
-            log = Log(execucao_id=execucao.id, nivel=l.get('nivel', 'info'), mensagem=l.get('mensagem', ''))
-            db.session.add(log)
+            db.session.add(Log(execucao_id=execucao.id, nivel=l.get('nivel', 'info'), mensagem=l.get('mensagem', '')))
 
         for e in result.get('evidencias', []):
-            ev = Evidencia(execucao_id=execucao.id, arquivo=e.get('arquivo'), tipo=e.get('tipo'))
-            db.session.add(ev)
+            db.session.add(Evidencia(execucao_id=execucao.id, arquivo=e.get('arquivo'), tipo=e.get('tipo')))
+
+        if not result.get('logs'):
+            db.session.add(Log(execucao_id=execucao.id, nivel='info', mensagem='Execução finalizada sem logs adicionais.'))
 
         db.session.commit()
     except Exception as exc:
@@ -43,8 +43,7 @@ def execute_case_task(caso_id):
         execucao.fim = datetime.utcnow()
         execucao.tempo = (execucao.fim - execucao.inicio).total_seconds()
         db.session.commit()
-        log = Log(execucao_id=execucao.id, nivel='error', mensagem=str(exc))
-        db.session.add(log)
+        db.session.add(Log(execucao_id=execucao.id, nivel='error', mensagem=str(exc)))
         db.session.commit()
 
     return {'execucao_id': execucao.id, 'status': execucao.status}

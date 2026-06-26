@@ -67,3 +67,10 @@ export async function executarCaso(id) {
 export async function getExecucoes() {
   return request('/execucoes');
 }
+
+export async function login(payload) {
+  return request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}

@@ -45,7 +45,8 @@ def create_app(config_class=Config):
         app.register_blueprint(evidencias_bp, url_prefix='/api/evidencias')
         app.register_blueprint(logs_bp, url_prefix='/api/logs')
         app.register_blueprint(core_bp, url_prefix='/api')
-    except Exception:
-        pass
+    except Exception as exc:
+        app.logger.exception('Falha ao registrar blueprints: %s', exc)
+        raise
 
     return app

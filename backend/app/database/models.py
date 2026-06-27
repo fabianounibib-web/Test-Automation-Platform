@@ -59,12 +59,14 @@ class CasoTeste(db.Model):
     __tablename__ = 'casos_teste'
     id = db.Column(db.Integer, primary_key=True)
     roteiro_id = db.Column(db.Integer, db.ForeignKey('roteiros.id'))
+    conector_id = db.Column(db.Integer, db.ForeignKey('conectores.id'), nullable=True)
     nome = db.Column(db.String(300))
     objetivo = db.Column(db.Text)
     dados = db.Column(db.JSON)  # Test data/parameters
     resultado_esperado = db.Column(db.Text)
     status = db.Column(db.String(50), default='criado')  # criado, validado, aguardando_dados, pronto, em_execucao, sucesso, erro, inconcluso, cancelado
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    conector = db.relationship('Conector', backref='casos')
 
 
 class Robo(db.Model):

@@ -4,20 +4,26 @@ import { login as loginRequest } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 function LoginPage() {
-  const [form, setForm] = useState({ email: '', senha: '' });
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const result = await loginRequest(form);
+      const result = await loginRequest(email, senha);
       login(result.user, result.access_token);
-      setError('');
       navigate('/');
     } catch (err) {
       setError(err.message || 'Não foi possível entrar. Verifique suas credenciais.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -26,12 +32,28 @@ function LoginPage() {
       <div className="panel" style={{ width: 'min(420px, 90vw)' }}>
         <h2>Entrar na plataforma</h2>
         <p>Autentique-se para acessar os módulos de execução e rastreio.</p>
+        {error && <div className="alert error">{error}</div>}
         <form onSubmit={handleSubmit}>
-          <input placeholder="E-mail" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <input type="password" placeholder="Senha" value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} />
-          <button type="submit">Entrar</button>
+          <input 
+            type="email"
+            placeholder="E-mail" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <input 
+            type="password" 
+            placeholder="Senha" 
+            value={senha} 
+            onChange={(e) => setSenha(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? 'Autenticando...' : 'Entrar'}
+          </button>
         </form>
-        {error && <p style={{ color: '#dc2626' }}>{error}</p>}
         <p style={{ marginTop: '0.8rem' }}>
           Não tem conta? <Link to="/register">Criar conta</Link>
         </p>

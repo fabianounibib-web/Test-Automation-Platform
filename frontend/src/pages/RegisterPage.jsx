@@ -3,20 +3,28 @@ import { Link, useNavigate } from 'react-router-dom';
 import { register as registerRequest } from '../services/api';
 
 function RegisterPage() {
-  const [form, setForm] = useState({ nome: '', email: '', senha: '', perfil: 'analista' });
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
     try {
-      await registerRequest(form);
-      setError('');
+      await registerRequest(nome, email, senha);
       setSuccess('Usuário criado com sucesso. Você pode entrar agora.');
-      setTimeout(() => navigate('/login'), 900);
+      setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
       setError(err.message || 'Não foi possível criar o usuário.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -25,15 +33,37 @@ function RegisterPage() {
       <div className="panel" style={{ width: 'min(460px, 90vw)' }}>
         <h2>Criar conta</h2>
         <p>Cadastre um usuário para acessar a plataforma.</p>
+        {error && <div className="alert error">{error}</div>}
+        {success && <div className="alert success">{success}</div>}
         <form onSubmit={handleSubmit}>
-          <input placeholder="Nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
-          <input placeholder="E-mail" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <input type="password" placeholder="Senha" value={form.senha} onChange={(e) => setForm({ ...form, senha: e.target.value })} />
-          <input placeholder="Perfil" value={form.perfil} onChange={(e) => setForm({ ...form, perfil: e.target.value })} />
-          <button type="submit">Cadastrar</button>
+          <input 
+            type="text"
+            placeholder="Nome" 
+            value={nome} 
+            onChange={(e) => setNome(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <input 
+            type="email"
+            placeholder="E-mail" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <input 
+            type="password" 
+            placeholder="Senha" 
+            value={senha} 
+            onChange={(e) => setSenha(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <button type="submit" disabled={loading || success !== ''}>
+            {loading ? 'Criando conta...' : 'Cadastrar'}
+          </button>
         </form>
-        {error && <p style={{ color: '#dc2626' }}>{error}</p>}
-        {success && <p style={{ color: '#16a34a' }}>{success}</p>}
         <p style={{ marginTop: '0.8rem' }}>
           Já possui conta? <Link to="/login">Entrar</Link>
         </p>

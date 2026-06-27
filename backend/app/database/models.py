@@ -18,6 +18,7 @@ class Cliente(db.Model):
     nome = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120))
     responsavel = db.Column(db.String(120))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class Sistema(db.Model):
@@ -35,11 +36,12 @@ class Conector(db.Model):
     nome = db.Column(db.String(200), nullable=False)
     descricao = db.Column(db.Text)
     url_base = db.Column(db.String(500), nullable=False)
-    ambiente = db.Column(db.String(80), default='produção')
-    status = db.Column(db.String(50), default='draft')
+    tipo = db.Column(db.String(50), default='web')  # web, sap, desktop, api, legacy
+    ambiente = db.Column(db.String(80), default='desenvolvimento')  # desenvolvimento, homologacao, producao_assistida
+    status = db.Column(db.String(50), default='draft')  # draft, ativo, inativo
     versao = db.Column(db.String(50), default='1.0.0')
     credenciais_ref = db.Column(db.JSON, default=dict)
-    steps = db.Column(db.JSON, default=list)
+    steps = db.Column(db.JSON, default=list)  # Recorded automation steps as JSON
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -59,9 +61,10 @@ class CasoTeste(db.Model):
     roteiro_id = db.Column(db.Integer, db.ForeignKey('roteiros.id'))
     nome = db.Column(db.String(300))
     objetivo = db.Column(db.Text)
-    dados = db.Column(db.JSON)
+    dados = db.Column(db.JSON)  # Test data/parameters
     resultado_esperado = db.Column(db.Text)
-    status = db.Column(db.String(50))
+    status = db.Column(db.String(50), default='criado')  # criado, validado, aguardando_dados, pronto, em_execucao, sucesso, erro, inconcluso, cancelado
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class Robo(db.Model):

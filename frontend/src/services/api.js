@@ -90,6 +90,24 @@ export async function executarRobo(id) {
   });
 }
 
+export async function getConectores() {
+  return request('/conectores');
+}
+
+export async function createConector(payload) {
+  return request('/conectores', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function executarConector(id, payload = {}) {
+  return request(`/conectores/${id}/executar`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
 export async function login(payload) {
   return request('/auth/login', {
     method: 'POST',

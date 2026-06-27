@@ -74,6 +74,52 @@ class ApiEndpointsTestCase(unittest.TestCase):
         self.assertEqual(payload['status'], 'success')
         self.assertEqual(payload['executor'], 'python')
 
+    def test_create_and_execute_conector(self):
+        response = self.client.post('/api/conectores', json={
+            'nome': 'Portal XPTO',
+            'descricao': 'Baixa histórico de pagamentos',
+            'url_base': 'https://xpto.com',
+            'credenciais_ref': {
+                'usuario': 'vault://cliente/xpto/usuario',
+                'senha': 'vault://cliente/xpto/senha'
+            },
+            'steps': [
+                {'action': 'goto', 'url': 'https://xpto.com'},
+                {'action': 'fill', 'target': 'usuario', 'selector': '#usuario', 'value': '${usuario}'},
+                {'action': 'fill', 'target': 'senha', 'selector': '#senha', 'value': '${senha}'},
+                {'action': 'click', 'target': 'entrar', 'selector': '#entrar'},
+                {'action': 'download', 'target': 'historico_pagamentos', 'selector': '#download'}
+            ]
+        })
+        self.assertEqual(response.status_code, 201)
+        payload = response.get_json()
+        self.assertEqual(payload['nome'], 'Portal XPTO')
+        self.assertEqual(len(payload['steps']), 5)
+
+        list_response = self.client.get('/api/conectores')
+        self.assertEqual(list_response.status_code, 200)
+        self.assertTrue(any(item['nome'] == 'Portal XPTO' for item in list_response.get_json()))
+
+        execute_response = self.client.post(f'/api/conectores/{payload["id"]}/executar', json={
+            'variaveis': {
+                'usuario': 'ana',
+                'senha': 'segredo'
+            }
+        })
+        self.assertEqual(execute_response.status_code, 202)
+        execute_payload = execute_response.get_json()
+        self.assertEqual(execute_payload['status'], 'success')
+        self.assertEqual(execute_payload['steps_executed'], 5)
+
+    def test_reject_invalid_conector_flow(self):
+        response = self.client.post('/api/conectores', json={
+            'nome': 'Portal inválido',
+            'url_base': 'https://xpto.com',
+            'steps': [{'action': 'fill'}]
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('details', response.get_json())
+
 
 if __name__ == '__main__':
     unittest.main()

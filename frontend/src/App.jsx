@@ -10,6 +10,7 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import HomePage from './pages/HomePage';
 import RobosPage from './pages/RobosPage';
+import ConectoresPage from './pages/ConectoresPage';
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/roteiros', label: 'Roteiros' },
   { to: '/casos', label: 'Casos' },
   { to: '/robos', label: 'Robôs' },
+  { to: '/conectores', label: 'Conectores' },
   { to: '/execucoes', label: 'Execuções' },
   { to: '/perfil', label: 'Perfil' }
 ];
@@ -63,6 +65,7 @@ function App() {
           <Route path="/roteiros" element={<ProtectedRoute><RoteirosPage /></ProtectedRoute>} />
           <Route path="/casos" element={<ProtectedRoute><CasosPage /></ProtectedRoute>} />
           <Route path="/robos" element={<ProtectedRoute><RobosPage /></ProtectedRoute>} />
+          <Route path="/conectores" element={<ProtectedRoute><ConectoresPage /></ProtectedRoute>} />
           <Route path="/execucoes" element={<ProtectedRoute><ExecucoesPage /></ProtectedRoute>} />
           <Route path="/perfil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />

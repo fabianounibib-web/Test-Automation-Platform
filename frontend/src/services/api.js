@@ -1,14 +1,28 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
-function getAuthToken() {
-  return localStorage.getItem('auth-token') || '';
+let authToken = '';
+
+// Função para atualizar o token (chamada pelo AuthContext)
+export function setAuthToken(token) {
+  authToken = token;
+  if (token) {
+    localStorage.setItem('auth-token', token);
+  } else {
+    localStorage.removeItem('auth-token');
+  }
+}
+
+// Inicializar token do localStorage
+if (typeof window !== 'undefined') {
+  authToken = localStorage.getItem('auth-token') || '';
 }
 
 async function request(path, options = {}) {
+  const token = authToken || localStorage.getItem('auth-token') || '';
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: getAuthToken() ? `Bearer ${getAuthToken()}` : '',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...(options.headers || {})
     },
     ...options

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { setAuthToken } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -10,11 +11,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('auth-token') || '');
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem('auth-token', token);
-    } else {
-      localStorage.removeItem('auth-token');
-    }
+    setAuthToken(token);
   }, [token]);
 
   useEffect(() => {

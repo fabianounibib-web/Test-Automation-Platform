@@ -3,13 +3,18 @@ import { useAuth } from '../contexts/AuthContext';
 import * as api from '../services/api';
 
 function DashboardPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [stats, setStats] = useState({ clientes: 0, sistemas: 0, casos: 0, execucoes: 0 });
   const [recentExecutions, setRecentExecutions] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     async function loadData() {
       try {
         const [clientesData, sistemasData, casosData, execucoesData] = await Promise.all([
@@ -35,7 +40,7 @@ function DashboardPage() {
     }
 
     loadData();
-  }, []);
+  }, [token]);
 
   return (
     <div>

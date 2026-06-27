@@ -16,6 +16,8 @@ class ApiEndpointsTestCase(unittest.TestCase):
             'LOGS_FOLDER': '/tmp',
             'REDIS_URL': 'redis://localhost:6379/0',
             'RPA_API_URL': 'http://localhost:8000/execute',
+            'task_always_eager': True,
+            'task_eager_propagates': True,
         }))
         self.app_context = self.app.app_context()
         self.app_context.push()
@@ -98,7 +100,7 @@ class ApiEndpointsTestCase(unittest.TestCase):
 
         list_response = self.client.get('/api/conectores')
         self.assertEqual(list_response.status_code, 200)
-        self.assertTrue(any(item['nome'] == 'Portal XPTO' for item in list_response.get_json()))
+        self.assertTrue(any(item['nome'] == 'Portal XPTO' for item in list_response.get_json().get('items', [])))
 
         execute_response = self.client.post(f'/api/conectores/{payload["id"]}/executar', json={
             'variaveis': {
@@ -119,6 +121,52 @@ class ApiEndpointsTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 400)
         self.assertIn('details', response.get_json())
+
+    def test_execute_caso_with_conector(self):
+        # Create connector with a simple flow
+        connector_response = self.client.post('/api/conectores', json={
+            'nome': 'Portal XPTO',
+            'descricao': 'Baixa histórico de pagamentos',
+            'url_base': 'https://xpto.com',
+            'credenciais_ref': {
+                'usuario': 'vault://cliente/xpto/usuario',
+                'senha': 'vault://cliente/xpto/senha'
+            },
+            'steps': [
+                {'action': 'goto', 'url': 'https://xpto.com'},
+                {'action': 'fill', 'target': 'usuario', 'selector': '#usuario', 'value': '${usuario}'},
+                {'action': 'fill', 'target': 'senha', 'selector': '#senha', 'value': '${senha}'},
+                {'action': 'click', 'target': 'entrar', 'selector': '#entrar'},
+                {'action': 'download', 'target': 'historico_pagamentos', 'selector': '#download'}
+            ]
+        })
+        self.assertEqual(connector_response.status_code, 201)
+        connector_id = connector_response.get_json()['id']
+
+        caso_response = self.client.post('/api/casos', json={
+            'nome': 'Caso com conector',
+            'objetivo': 'Executar portal',
+            'conector_id': connector_id,
+            'dados': {
+                'usuario': 'ana',
+                'senha': 'segredo'
+            }
+        })
+        self.assertEqual(caso_response.status_code, 201)
+        caso_id = caso_response.get_json()['id']
+
+        execute_response = self.client.post(f'/api/execucoes/casos/{caso_id}/execute')
+        self.assertEqual(execute_response.status_code, 201)
+        payload = execute_response.get_json()
+        self.assertEqual(payload['status'], 'success')
+        self.assertIn('rpa_id', payload)
+        self.assertEqual(payload['caso_teste_id'], caso_id)
+
+        # Verify execution record was persisted
+        execution_id = payload['id']
+        exec_detail = self.client.get(f'/api/execucoes/{execution_id}')
+        self.assertEqual(exec_detail.status_code, 200)
+        self.assertEqual(exec_detail.get_json()['status'], 200)
 
 
 if __name__ == '__main__':

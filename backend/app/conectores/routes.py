@@ -1,9 +1,12 @@
 from datetime import datetime
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+
+from flask import Blueprint, current_app, request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+
 from app import db
+from app.core.connectors import execute_connector_flow, validate_steps
 from app.database.models import Conector, User
-from app.helpers import response_success, response_error
+from app.helpers import response_error, response_success
 
 conectores_bp = Blueprint('conectores', __name__)
 
@@ -80,14 +83,23 @@ def create_conector(current_user_id):
     if not nome or not url_base:
         return response_error('Nome e URL são obrigatórios', 400)
 
+    steps = data.get('steps', [])
+    if 'steps' in data:
+        if not isinstance(steps, list):
+            return response_error('Steps deve ser uma lista', 400)
+        validation_errors = validate_steps(steps)
+        if validation_errors:
+            return response_error('Fluxo de conector inválido', 400, details=validation_errors)
+
     conector = Conector(
         nome=nome,
         descricao=(data.get('descricao') or '').strip() or None,
         url_base=url_base,
         tipo=data.get('tipo', 'web'),
         ambiente=data.get('ambiente', 'desenvolvimento'),
-        status=data.get('status', 'draft'),
+        status=data.get('status', 'ativo' if steps else 'draft'),
         credenciais_ref=data.get('credenciais_ref', {}),
+        steps=steps,
     )
     db.session.add(conector)
     db.session.commit()
@@ -181,6 +193,43 @@ def save_steps(current_user_id, conector_id):
     db.session.commit()
 
     return response_success(serialize_conector(conector), 'Steps salvos com sucesso')
+
+
+@conectores_bp.route('/<int:conector_id>/executar', methods=['POST'])
+@jwt_required()
+def executar_conector(current_user_id, conector_id):
+    """Execute a saved connector flow using the RPA engine."""
+    user = User.query.get(current_user_id)
+    if not user:
+        return response_error('Usuário não encontrado', 404)
+
+    conector = Conector.query.get(conector_id)
+    if not conector:
+        return response_error('Sistema não encontrado', 404)
+
+    data = request.get_json(silent=True) or {}
+    runtime_values = data.get('variaveis') or data.get('runtime_values') or {}
+    if not isinstance(runtime_values, dict):
+        return response_error('Variáveis de runtime devem ser um objeto', 400)
+
+    result = execute_connector_flow(
+        conector,
+        conector_id,
+        runtime_values=runtime_values,
+        evidence_dir=current_app.config.get('EVIDENCIAS_FOLDER'),
+    )
+
+    if not result['success']:
+        return response_error(result['message'], 400, details=result.get('logs'))
+
+    return response_success({
+        'id': conector.id,
+        'nome': conector.nome,
+        'status': 'success',
+        'steps_executed': result['steps_executed'],
+        'logs': result['logs'],
+        'evidence_path': result.get('evidence_path'),
+    }, 'Conector executado com sucesso', 202)
 
 
 @conectores_bp.route('/<int:conector_id>/steps', methods=['GET'])

@@ -1,6 +1,6 @@
 from datetime import datetime
 from app import db
-from app.database.models import Execucao, CasoTeste, Log
+from app.database.models import Execucao, CasoTeste, Log, Evidencia, Conector
 
 
 # Lazy import to avoid circular imports
@@ -43,36 +43,64 @@ def _create_execute_task():
             db.session.add(log_entry)
             db.session.commit()
 
-            # TODO: Implement actual RPA execution here
-            # For MVP, this will be a placeholder that simulates execution
-            # Later, this will integrate with Playwright or other RPA engines
+            # Load connector for the case
+            conector = None
+            if caso.conector_id:
+                conector = Conector.query.get(caso.conector_id)
 
-            # Simulate execution
-            resultado_obtido = 'Teste executado com sucesso'
-            resultado_esperado = caso.resultado_esperado or 'Execução concluída sem erros'
+            if not conector:
+                execucao.status = 'erro'
+                execucao.fim = datetime.utcnow()
+                execucao.tempo = (execucao.fim - execucao.inicio).total_seconds()
+                log_entry = Log(
+                    execucao_id=execucao_id,
+                    nivel='ERROR',
+                    mensagem='Caso não possui conector associado para execução.'
+                )
+                db.session.add(log_entry)
+                db.session.commit()
+                return {
+                    'execucao_id': execucao_id,
+                    'status': execucao.status,
+                    'classificacao': 'erro',
+                    'tempo': execucao.tempo
+                }
 
-            # Compare result with expected (simplified)
-            if 'sucesso' in resultado_obtido.lower() and 'erro' not in resultado_obtido.lower():
+            # Execute connector flow using runtime data from the case
+            result = execute_connector_flow(
+                conector,
+                execucao_id,
+                runtime_values=caso.dados or {},
+                evidence_dir=current_app.config.get('EVIDENCIAS_FOLDER'),
+            )
+
+            # Persist logs from connector execution
+            for item in result.get('logs', []):
+                db.session.add(Log(
+                    execucao_id=execucao_id,
+                    nivel=item.get('nivel', 'INFO').upper(),
+                    mensagem=item.get('mensagem', '')
+                ))
+
+            # Persist evidence if available
+            evidence_path = result.get('evidence_path')
+            if evidence_path:
+                db.session.add(Evidencia(
+                    execucao_id=execucao_id,
+                    arquivo=evidence_path,
+                    tipo='report'
+                ))
+
+            if not result.get('success', False):
+                execucao.status = 'erro'
+                classificacao = 'erro'
+            else:
                 execucao.status = 'sucesso'
                 classificacao = 'sucesso'
-            else:
-                execucao.status = 'erro'
-                classificacao = 'erro_funcional'
 
-            # Calculate execution time
             execucao.fim = datetime.utcnow()
             execucao.tempo = (execucao.fim - execucao.inicio).total_seconds()
-
-            # Log: execution completed
-            log_entry = Log(
-                execucao_id=execucao_id,
-                nivel='INFO',
-                mensagem=f'Execução concluída. Resultado: {classificacao}. Tempo: {execucao.tempo:.2f}s'
-            )
-            db.session.add(log_entry)
-            db.session.commit()
-
-            # Update execution record
+            execucao.rpa_id = str(self.request.id or self.request.id)
             db.session.commit()
 
             return {

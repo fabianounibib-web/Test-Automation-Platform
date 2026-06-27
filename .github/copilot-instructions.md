@@ -1,57 +1,47 @@
-# Instruções para implementação da Plataforma
+# Instruções para continuidade do MVP (foco em RPA)
 
 ## Objetivo
-Implementar a primeira versão funcional da plataforma com foco em usabilidade, integração com o backend existente e evolução incremental.
+Evoluir a plataforma do MVP inicial para um fluxo de automação real, com conectores inteligentes, execução assíncrona, logs e evidências. A prioridade é transformar os passos gravados em automações executáveis pelo motor RPA.
 
-## Etapas recomendadas
+## Estado verificado do repositório
+- Frontend React + Vite com páginas de autenticação, dashboard, clientes, roteiros, casos, conectores, execuções e perfil.
+- Backend Flask modular com autenticação JWT, CRUD de domínio, endpoints de execuções e conectores.
+- Modelo de dados com Conector, CasoTeste, Execucao, Log e Evidencia.
+- Camada de executores com registry para Python, Playwright e Selenium.
+- Fluxo de execução assíncrono com Celery + Redis e task placeholder.
+- Validação de passos e descrição de fluxo para conectores.
 
-### 1. Preparar o frontend
-- Criar a estrutura inicial com React + Vite.
-- Definir layout base com sidebar, páginas principais e navegação.
-- Organizar pastas por domínio: pages, services, components, hooks, contexts.
+## Prioridades de implementação
 
-### 2. Integrar com a API backend
-- Criar serviços para consumir os endpoints de:
-  - autenticação
-  - clientes
-  - roteiros
-  - casos de teste
-  - execuções
-  - logs e evidências
-- Usar base URL configurável via variável de ambiente.
+### 1. Motor de execução real
+- Implementar a execução de conectores em navegador com Playwright, mantendo Selenium como fallback.
+- Mapear as ações suportadas: `goto`, `fill`, `click`, `select`, `wait`, `assert` e `download`.
+- Resolver valores de runtime a partir de dados do caso e referências seguras de credenciais.
 
-### 3. Implementar autenticação
-- Criar fluxo de login e proteção de rotas.
-- Armazenar token JWT de forma segura.
-- Adicionar tratamento de erros e refresh de sessão quando necessário.
+### 2. Evidências e observabilidade
+- Capturar screenshots, logs estruturados e arquivos gerados durante a execução.
+- Persistir evidências e associá-las à execução correspondente.
+- Expor o status detalhado no frontend para acompanhamento em tempo real.
 
-### 4. Implementar CRUD inicial
-- Clientes: listagem, cadastro e edição.
-- Roteiros: listagem, upload e status.
-- Casos: cadastro, edição e execução.
-- Execuções: histórico, detalhes e acompanhamento em tempo real.
+### 3. Robustez operacional
+- Adicionar timeouts, retries, tratamento de falhas e cancelamento.
+- Classificar sucesso, erro e inconclusão a partir de assertions e artefatos gerados.
+- Garantir que falhas de execução não interrompam o fluxo da API.
 
-### 5. Integrar execução assíncrona
-- Ao clicar em executar, chamar o endpoint de execução do backend.
-- Exibir feedback para o usuário enquanto a tarefa roda.
-- Mostrar logs e evidências ao final da execução.
-
-### 6. Qualidade e observabilidade
-- Adicionar validação de formulário no frontend.
-- Exibir mensagens de erro amigáveis.
-- Registrar logs relevantes no backend e no frontend.
-- Criar testes básicos para fluxos críticos.
+### 4. Qualidade e testes
+- Cobrir o fluxo de execução com testes de integração e regressão.
+- Manter os endpoints REST consistentes e respostas claras para o frontend.
+- Evitar duplicação de lógica entre backend e frontend.
 
 ## Diretrizes técnicas
-- Manter o frontend desacoplado do backend.
-- Priorizar componentes reutilizáveis.
-- Usar nomes claros para rotas, serviços e estados.
-- Documentar novas integrações no README e na arquitetura.
-- Evitar duplicação de lógica de negócio.
+- Manter o frontend desacoplado do backend e consumir as APIs via camada de serviços.
+- Priorizar componentes reutilizáveis e estados claros no frontend.
+- Tratar cada integração como um conector versionado, não como um script isolado.
+- Nunca armazenar segredos em texto aberto nos fluxos; usar referências seguras e valores de runtime.
+- Documentar alterações de integração e regras de execução no README e na arquitetura.
 
-## Entregas iniciais
-1. Estrutura base do frontend.
-2. Navegação principal.
-3. Tela de dashboard.
-4. Telas de clientes e roteiros com estrutura inicial.
-5. Integração inicial com endpoints do backend.
+## Entregas recomendadas para o próximo ciclo
+1. Implementar um executor Playwright real para o fluxo de conectores.
+2. Conectar os passos salvos ao motor de execução e registrar logs em tempo real.
+3. Adicionar captura de evidências e persistência de artefatos.
+4. Melhorar o tratamento de erro e a experiência de acompanhamento no frontend.

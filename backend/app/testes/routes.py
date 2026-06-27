@@ -1,8 +1,10 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.database.models import CasoTeste, Roteiro, Conector, User
 from app.helpers import response_success, response_error
+
+from app.tasks.execute_case import get_execute_test_case_task
 
 testes_bp = Blueprint('testes', __name__)
 
@@ -12,6 +14,7 @@ def serialize_caso_teste(caso):
     return {
         'id': caso.id,
         'roteiro_id': caso.roteiro_id,
+        'conector_id': caso.conector_id,
         'nome': caso.nome,
         'objetivo': caso.objetivo,
         'dados': caso.dados or {},
@@ -89,8 +92,15 @@ def create_caso(current_user_id):
         if not roteiro:
             return response_error('Roteiro não encontrado', 404)
 
+    conector_id = data.get('conector_id')
+    if conector_id is not None:
+        conector = Conector.query.get(conector_id)
+        if not conector:
+            return response_error('Conector não encontrado', 404)
+
     caso = CasoTeste(
         roteiro_id=roteiro_id,
+        conector_id=conector_id,
         nome=nome,
         objetivo=(data.get('objetivo') or '').strip() or None,
         dados=data.get('dados', {}),
@@ -131,11 +141,14 @@ def update_caso(current_user_id, caso_id):
     
     if 'resultado_esperado' in data:
         caso.resultado_esperado = (data.get('resultado_esperado') or '').strip() or None
-    
-    if 'status' in data:
-        caso.status = data.get('status')
 
-    db.session.commit()
+    if 'conector_id' in data:
+        conector_id = data.get('conector_id')
+        if conector_id is not None:
+            conector = Conector.query.get(conector_id)
+            if not conector:
+                return response_error('Conector não encontrado', 404)
+        caso.conector_id = conector_id
 
     return response_success(serialize_caso_teste(caso), 'Caso de teste atualizado com sucesso')
 
@@ -159,12 +172,18 @@ def delete_caso(current_user_id, caso_id):
 
 
 @testes_bp.route('/<int:id>/executar', methods=['POST'])
-def executar_caso(id):
-    from app.tasks.execute_case import execute_case_task
+@jwt_required()
+def executar_caso(current_user_id, id):
+    user = User.query.get(current_user_id)
+    if not user:
+        return response_error('Usuário não encontrado', 404)
 
     caso = CasoTeste.query.get(id)
     if not caso:
-        return jsonify({'error': 'caso não encontrado'}), 404
+        return response_error('Caso de teste não encontrado', 404)
 
-    task = execute_case_task.delay(id)
-    return jsonify({'task_id': task.id, 'status': 'queued'}), 202
+    if not caso.conector_id:
+        return response_error('Caso de teste não está associado a um conector', 400)
+
+    task = get_execute_test_case_task().delay(id, current_user_id)
+    return response_success({'task_id': task.id, 'status': 'queued'}, 'Execução agendada', 202)

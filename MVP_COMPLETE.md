@@ -1,253 +1,98 @@
-# 🎯 MVP Test Automation Platform - COMPLETO
+# MVP Test Automation Platform - Status Atual
 
-## Status: ✅ PRONTO PARA TESTE
+## Status: 🔧 EM EVOLUÇÃO PARA O MVP RPA
 
-**Data:** 2024  
-**Fase:** MVP Web RPA com Recording em Modal
-
----
-
-## ✅ Backend API (Completo)
-
-### Endpoints Implementados (40+ endpoints)
-
-```
-✅ POST   /api/auth/login              - Autenticação JWT
-✅ POST   /api/auth/register           - Registro de usuários
-✅ GET    /api/auth/me                 - Usuário autenticado
-✅ POST   /api/auth/refresh            - Renovação de token
-
-✅ GET    /api/clientes                - Listar (paginado)
-✅ GET    /api/clientes/{id}           - Obter cliente
-✅ POST   /api/clientes                - Criar cliente
-✅ PUT    /api/clientes/{id}           - Atualizar cliente
-✅ DELETE /api/clientes/{id}           - Deletar cliente
-
-✅ GET    /api/conectores              - Listar sistemas
-✅ GET    /api/conectores/{id}         - Obter sistema
-✅ POST   /api/conectores              - Criar sistema
-✅ PUT    /api/conectores/{id}         - Atualizar sistema
-✅ DELETE /api/conectores/{id}         - Deletar sistema
-✅ POST   /api/conectores/{id}/steps   - Salvar passos (recording)
-✅ GET    /api/conectores/{id}/steps   - Obter passos gravados
-
-✅ GET    /api/casos                   - Listar casos de teste
-✅ GET    /api/casos/{id}              - Obter caso
-✅ POST   /api/casos                   - Criar caso
-✅ PUT    /api/casos/{id}              - Atualizar caso
-✅ DELETE /api/casos/{id}              - Deletar caso
-
-✅ GET    /api/roteiros                - Listar roteiros
-✅ GET    /api/roteiros/{id}           - Obter roteiro
-✅ POST   /api/roteiros/upload         - Upload XLS/CSV/JSON
-✅ DELETE /api/roteiros/{id}           - Deletar roteiro
-
-✅ GET    /api/execucoes               - Listar execuções (paginado)
-✅ GET    /api/execucoes/{id}          - Obter execução (POLLING)
-✅ POST   /api/execucoes/casos/{id}/execute - Iniciar execução (Celery)
-✅ GET    /api/execucoes/{id}/logs     - Obter logs (paginado)
-✅ GET    /api/execucoes/{id}/evidencias - Obter evidências (paginado)
-✅ POST   /api/execucoes/{id}/cancel   - Cancelar execução
-```
-
-### Database Models (8 Entidades)
-- ✅ User (autenticação com JWT)
-- ✅ Cliente (com CRUD completo)
-- ✅ Conector (tipos web/sap/desktop/api/legacy - futuro)
-- ✅ Roteiro (upload de arquivos)
-- ✅ CasoTeste (com dados JSON e resultado esperado)
-- ✅ Execucao (com status e tempo de execução)
-- ✅ Log (rastreamento de etapas)
-- ✅ Evidencia (screenshots e dados)
-
-### Fluxo de Execução Assíncrono
-1. Frontend: POST `/execucoes/casos/{id}/execute`
-2. Backend: Cria registro Execucao com status `iniciando`
-3. Backend: Enfileira Celery task `execute_test_case`
-4. Backend: Retorna `execucao_id` para cliente
-5. Frontend: Poll GET `/execucoes/{id}` a cada 3 segundos
-6. Worker: Executa automação (placeholder para Playwright)
-7. Worker: Salva logs e evidências no banco
-8. Frontend: Atualiza UI com status em tempo real
+**Data:** 2026-06-27  
+**Fase:** base operacional do MVP com foco em automação real por conectores
 
 ---
 
-## ✅ Frontend SPA (Completo)
+## ✅ O que já está implementado
 
-### Estrutura React + Vite
-- ✅ React 18 com Vite (hot reload)
-- ✅ React Router v6 (SPA com proteção de rotas)
-- ✅ Context API para autenticação (JWT em localStorage)
-- ✅ CSS vanilla (sem tailwind) com design system completo
-- ✅ Fetch API para HTTP com layer de serviços
+### Backend
+- Autenticação JWT com registro e login.
+- CRUD de clientes, roteiros, casos de teste, conectores e execuções.
+- Modelos de domínio para execução, logs e evidências.
+- Endpoints para salvar e recuperar passos de automação em conectores.
+- Camada de executores com registry para Python, Playwright e Selenium.
+- Execução assíncrona iniciada via Celery/Redis, com registro de status e logs.
 
-### Páginas Implementadas (8 páginas)
+### Frontend
+- SPA React + Vite com navegação protegida.
+- Páginas para autenticação, dashboard, clientes, roteiros, casos, conectores, execuções e perfil.
+- Monitoramento de execuções com polling e visualização de logs/evidências.
+- Camada de serviços para consumir a API.
 
-#### 📱 Autenticação & Onboarding
-- [x] `HomePage.jsx` - Landing page com features e CTA
-- [x] `LoginPage.jsx` - Autenticação com erro handling
-- [x] `RegisterPage.jsx` - Criação de conta
-
-#### 📊 Dashboard & CRUD
-- [x] `DashboardPage.jsx` - Stats (clientes, sistemas, casos, execuções)
-- [x] `ClientesPage.jsx` - CRUD clientes com paginação
-- [x] `RoteirosPage.jsx` - Upload + list roteiros
-- [x] `CasosPage.jsx` - CRUD casos com link a roteiros
-- [x] `ConectoresPage.jsx` - CRUD sistemas (web/sap/desktop/api/legacy)
-
-#### ⚙️ Execução & Monitoramento
-- [x] `ExecucoesPage.jsx` - **POLLING IMPLEMENTATION**
-  - Lista execuções na esquerda
-  - Detalhes + polling automático (3s) na direita
-  - Status em tempo real com cores
-  - Logs com filtros (INFO/ERROR/WARNING)
-  - Evidências (screenshots, logs, dados)
-  - Botão cancelar execução
-  - Spinner durante carregamento
-
-#### 👤 Suporte
-- [x] `ProfilePage.jsx` - Dados do usuário autenticado
-- [x] `RobosPage.jsx` - Placeholder (futuro)
-
-### API Service Layer (60+ funções)
-```javascript
-// Autenticação
-login(email, senha)
-register(nome, email, senha)
-getCurrentUser()
-refreshToken()
-
-// Clientes CRUD
-getClientes(page, per_page)
-getCliente(id)
-createCliente(payload)
-updateCliente(id, payload)
-deleteCliente(id)
-
-// Sistemas/Conectores CRUD
-getSistemas(page, per_page)
-getSistema(id)
-createSistema(payload)
-updateSistema(id, payload)
-deleteSistema(id)
-getSistemaSteps(id)
-saveSistemaSteps(id, steps)
-
-// Casos CRUD
-getCasos(page, per_page, filters)
-getCaso(id)
-createCaso(payload)
-updateCaso(id, payload)
-deleteCaso(id)
-
-// Roteiros
-getRoteiros(page, per_page, filters)
-getRoteiro(id)
-uploadRoteiro(file, clienteId)
-deleteRoteiro(id)
-
-// Execuções (POLLING)
-getExecucoes(page, per_page, filters)
-getExecucao(id)              // Main polling endpoint
-executeCaso(casoId)          // Inicia execução
-getExecucaoLogs(id, page)
-getExecucaoEvidencias(id, page)
-cancelExecution(id)
-```
-
-### Styling & Components
-- ✅ Responsive grid layout (sidebar + main)
-- ✅ Form inputs, buttons, selects styled
-- ✅ Status badges (success, error, warning, info)
-- ✅ Tables com paginação
-- ✅ Loading spinners
-- ✅ Alert boxes (success, error, warning)
-- ✅ Modal-ready structure
+### RPA e conectores
+- Estrutura de conector com nome, URL, ambiente, versão e passos JSON.
+- Validação básica de ações (`goto`, `fill`, `click`, `select`, `wait`, `assert`, `download`).
+- Descrição legível dos passos para execução e observabilidade.
 
 ---
 
-## 🚀 Como Rodar o MVP
+## 🔄 O que ainda precisa ser concluído para o MVP de RPA
 
-### 1. Backend (Terminal 1)
+### 1. Execução real em navegador
+- Implementar um executor de verdade com Playwright (ou Selenium como fallback).
+- Traduzir os passos do conector para ações executáveis no navegador.
+- Tratar wait, assertions e downloads de forma robusta.
+
+### 2. Dados e credenciais em runtime
+- Resolver valores dinâmicos a partir de dados do caso e referências seguras.
+- Garantir que credenciais não sejam expostas em logs ou fluxo salvo.
+
+### 3. Evidências e rastreabilidade
+- Capturar screenshots, logs detalhados e arquivos gerados pelas execuções.
+- Persistir evidências no armazenamento da aplicação e exibi-las no frontend.
+
+### 4. Robustez operacional
+- Implementar timeouts, retries e cancelamento real de execução.
+- Classificar resultados com base em assertions e artefatos produzidos.
+- Expor o estado final de forma clara para o usuário.
+
+### 5. Qualidade
+- Cobrir os fluxos críticos com testes automatizados.
+- Manter a experiência do usuário consistente durante o acompanhamento de execuções.
+
+---
+
+## 📌 Próximo checkpoint recomendado
+1. Conectar os passos gravados ao executor real do navegador.
+2. Garantir que cada execução gere logs e evidências válidos.
+3. Validar o fluxo completo: conector → caso → execução → logs/evidências.
+4. Fechar um cenário end-to-end com um portal de teste simples.
+
+---
+
+## ▶️ Como rodar a base atual
+
+### Backend
 ```bash
 cd /workspaces/Test-Automation-Platform/backend
-
-# Setup
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
-
-# Run
 python run.py
-# Server listening at http://localhost:5000/api
 ```
 
-### 2. Frontend (Terminal 2)
+### Frontend
 ```bash
 cd /workspaces/Test-Automation-Platform/frontend
-
-# Setup
 npm install
-
-# Run dev
 npm run dev
-# Navigate to http://localhost:5173
 ```
 
-### 3. Redis + Celery Worker (Terminal 3)
+### Worker Celery
 ```bash
-# Make sure Redis is running
-redis-cli  # Test connection
-
-# In backend folder
+cd /workspaces/Test-Automation-Platform/backend
 source venv/bin/activate
 celery -A app.celery_app worker --loglevel=info
 ```
 
-### 4. Test Flow
-1. Register new user at http://localhost:5173/register
-2. Login at http://localhost:5173/login
-3. Create Cliente → Roteiro → CasoTeste
-4. Click "Executar" on a caso
-5. Go to Execuções page
-6. See status updating every 3 seconds ⏱️
-
 ---
 
-## 📋 Checklist MVP
-
-### Backend
-- [x] Flask app factory + blueprints
-- [x] SQLAlchemy ORM com migrations
-- [x] JWT authentication com refresh token
-- [x] 8 database models com relationships
-- [x] 40+ REST endpoints com response helpers
-- [x] Celery task queue para execução assíncrona
-- [x] File upload handling (roteiros)
-- [x] Error handling global + JWT error handlers
-- [x] Environment config (.env)
-- [x] Database initialization on startup
-
-### Frontend
-- [x] React Router SPA setup
-- [x] AuthContext com JWT persistence
-- [x] Protected routes wrapper
-- [x] API service layer (60+ functions)
-- [x] 8 pages implementadas
-- [x] Form handling com validação
-- [x] Pagination implementation
-- [x] Loading/error states
-- [x] **Polling logic (3-second interval)**
-- [x] Status badges com cores
-- [x] Responsive CSS grid
-- [x] HomePage landing page
-
-### Features Complexas ✅
-- [x] Autenticação stateless (JWT)
-- [x] Execução assíncrona (Celery + Redis)
-- [x] Polling sem WebSocket
-- [x] Suporte a múltiplos tipos de sistema (estrutura)
-- [x] Upload de arquivos
+## ✅ Resumo do estado
+A plataforma já possui a estrutura de produto e o esqueleto operacional do MVP. O próximo grande salto é transformar o fluxo de conectores em uma automação RPA realmente executável, observável e auditável.
 - [x] Paginação em todas as listas
 - [x] Modelos com relacionamentos (FK)
 - [x] JSON fields para steps e dados

@@ -163,11 +163,3 @@ function ConectoresPage() {
 }
 
 export default ConectoresPage;
-          <p>Nenhum conector cadastrado ainda.</p>
-        )}
-      </section>
-    </div>
-  );
-}
-
-export default ConectoresPage;

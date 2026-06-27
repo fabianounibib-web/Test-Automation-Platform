@@ -36,6 +36,7 @@ def create_app(config_class=Config):
         from app.evidencias.routes import evidencias_bp
         from app.logs.routes import logs_bp
         from app.robos.routes import robos_bp
+        from app.conectores.routes import conectores_bp
         from app.core.routes import core_bp
 
         app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -46,6 +47,7 @@ def create_app(config_class=Config):
         app.register_blueprint(evidencias_bp, url_prefix='/api/evidencias')
         app.register_blueprint(logs_bp, url_prefix='/api/logs')
         app.register_blueprint(robos_bp, url_prefix='/api/robos')
+        app.register_blueprint(conectores_bp, url_prefix='/api/conectores')
         app.register_blueprint(core_bp, url_prefix='/api')
     except Exception as exc:
         app.logger.exception('Falha ao registrar blueprints: %s', exc)

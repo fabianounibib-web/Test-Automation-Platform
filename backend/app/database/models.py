@@ -29,6 +29,21 @@ class Sistema(db.Model):
     credenciais = db.Column(db.JSON)
 
 
+class Conector(db.Model):
+    __tablename__ = 'conectores'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text)
+    url_base = db.Column(db.String(500), nullable=False)
+    ambiente = db.Column(db.String(80), default='produção')
+    status = db.Column(db.String(50), default='draft')
+    versao = db.Column(db.String(50), default='1.0.0')
+    credenciais_ref = db.Column(db.JSON, default=dict)
+    steps = db.Column(db.JSON, default=list)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Roteiro(db.Model):
     __tablename__ = 'roteiros'
     id = db.Column(db.Integer, primary_key=True)

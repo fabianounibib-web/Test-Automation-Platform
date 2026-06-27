@@ -46,9 +46,20 @@ class CasoTesteSchema(Schema):
     created_at = fields.DateTime(dump_only=True)
 
 
+class RoboSchema(Schema):
+    id = fields.Int(dump_only=True)
+    nome = fields.Str(required=True)
+    descricao = fields.Str()
+    tipo = fields.Str()
+    script = fields.Str()
+    status = fields.Str()
+    created_at = fields.DateTime(dump_only=True)
+
+
 class ExecucaoSchema(Schema):
     id = fields.Int(dump_only=True)
-    caso_teste_id = fields.Int(required=True)
+    caso_teste_id = fields.Int(required=False)
+    robo_id = fields.Int(required=False)
     inicio = fields.DateTime()
     fim = fields.DateTime()
     status = fields.Str()

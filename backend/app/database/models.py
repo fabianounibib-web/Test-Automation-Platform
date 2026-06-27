@@ -49,10 +49,22 @@ class CasoTeste(db.Model):
     status = db.Column(db.String(50))
 
 
+class Robo(db.Model):
+    __tablename__ = 'robos'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(300), nullable=False)
+    descricao = db.Column(db.Text)
+    tipo = db.Column(db.String(100), default='python')
+    script = db.Column(db.Text)
+    status = db.Column(db.String(50), default='draft')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class Execucao(db.Model):
     __tablename__ = 'execucoes'
     id = db.Column(db.Integer, primary_key=True)
     caso_teste_id = db.Column(db.Integer, db.ForeignKey('casos_teste.id'))
+    robo_id = db.Column(db.Integer, db.ForeignKey('robos.id'))
     inicio = db.Column(db.DateTime)
     fim = db.Column(db.DateTime)
     status = db.Column(db.String(50))

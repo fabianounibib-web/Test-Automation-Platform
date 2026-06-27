@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 from sqlalchemy import func
 from app import db
-from app.database.models import CasoTeste, Execucao, Log
+from app.database.models import CasoTeste, Execucao, Log, Robo
 
 core_bp = Blueprint('core', __name__)
 
@@ -9,6 +9,7 @@ core_bp = Blueprint('core', __name__)
 @core_bp.route('/dashboard', methods=['GET'])
 def dashboard():
     total_testes = CasoTeste.query.count()
+    total_robos = Robo.query.count()
     execucoes = Execucao.query.order_by(Execucao.created_at.desc()).limit(5).all()
     tempo_medio = db.session.query(func.avg(Execucao.tempo)).scalar() or 0
     fila_execucao = Execucao.query.filter(Execucao.status == 'running').count()
@@ -16,6 +17,7 @@ def dashboard():
 
     return jsonify({
         'total_testes': total_testes,
+        'total_robos': total_robos,
         'ultimas_execucoes': [
             {
                 'id': execucao.id,

@@ -28,6 +28,10 @@ function DashboardPage() {
           <p>{metrics?.total_testes ?? 0}</p>
         </div>
         <div className="card">
+          <h3>Robôs cadastrados</h3>
+          <p>{metrics?.total_robos ?? 0}</p>
+        </div>
+        <div className="card">
           <h3>Execuções em fila</h3>
           <p>{metrics?.fila_execucao ?? 0}</p>
         </div>

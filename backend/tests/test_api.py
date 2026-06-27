@@ -41,6 +41,39 @@ class ApiEndpointsTestCase(unittest.TestCase):
         self.assertEqual(dashboard.status_code, 200)
         self.assertIn('total_testes', dashboard.get_json())
 
+    def test_create_robo_and_list(self):
+        response = self.client.post('/api/robos', json={
+            'nome': 'RPA Login',
+            'descricao': 'Automação de login para o portal',
+            'tipo': 'python',
+            'script': 'print("ok")',
+            'status': 'draft'
+        })
+        self.assertEqual(response.status_code, 201)
+        payload = response.get_json()
+        self.assertEqual(payload['nome'], 'RPA Login')
+
+        list_response = self.client.get('/api/robos')
+        self.assertEqual(list_response.status_code, 200)
+        self.assertTrue(any(item['nome'] == 'RPA Login' for item in list_response.get_json()))
+
+    def test_execute_robo_uses_executor_dispatcher(self):
+        create_response = self.client.post('/api/robos', json={
+            'nome': 'Robo Python',
+            'descricao': 'Execução via executor python',
+            'tipo': 'python',
+            'script': 'print("ok")',
+            'status': 'ready'
+        })
+        self.assertEqual(create_response.status_code, 201)
+        robo_id = create_response.get_json()['id']
+
+        execute_response = self.client.post(f'/api/robos/{robo_id}/executar')
+        self.assertEqual(execute_response.status_code, 202)
+        payload = execute_response.get_json()
+        self.assertEqual(payload['status'], 'success')
+        self.assertEqual(payload['executor'], 'python')
+
 
 if __name__ == '__main__':
     unittest.main()

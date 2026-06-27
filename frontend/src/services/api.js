@@ -73,6 +73,23 @@ export async function getExecucoes() {
   return request('/execucoes');
 }
 
+export async function getRobos() {
+  return request('/robos');
+}
+
+export async function createRobo(payload) {
+  return request('/robos', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function executarRobo(id) {
+  return request(`/robos/${id}/executar`, {
+    method: 'POST'
+  });
+}
+
 export async function login(payload) {
   return request('/auth/login', {
     method: 'POST',

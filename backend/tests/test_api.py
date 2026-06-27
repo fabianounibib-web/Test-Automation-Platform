@@ -98,7 +98,7 @@ class ApiEndpointsTestCase(unittest.TestCase):
 
         list_response = self.client.get('/api/conectores')
         self.assertEqual(list_response.status_code, 200)
-        self.assertTrue(any(item['nome'] == 'Portal XPTO' for item in list_response.get_json()))
+        self.assertTrue(any(item['nome'] == 'Portal XPTO' for item in list_response.get_json().get('items', [])))
 
         execute_response = self.client.post(f'/api/conectores/{payload["id"]}/executar', json={
             'variaveis': {

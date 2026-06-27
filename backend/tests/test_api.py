@@ -14,10 +14,12 @@ class ApiEndpointsTestCase(unittest.TestCase):
             'UPLOAD_FOLDER': '/tmp',
             'EVIDENCIAS_FOLDER': '/tmp',
             'LOGS_FOLDER': '/tmp',
-            'REDIS_URL': 'redis://localhost:6379/0',
+            'REDIS_URL': 'memory://',
+            'CELERY_BROKER_URL': 'memory://',
+            'CELERY_RESULT_BACKEND': 'cache+memory://',
             'RPA_API_URL': 'http://localhost:8000/execute',
-            'task_always_eager': True,
-            'task_eager_propagates': True,
+            'CELERY_TASK_ALWAYS_EAGER': True,
+            'CELERY_TASK_EAGER_PROPAGATES': True,
         }))
         self.app_context = self.app.app_context()
         self.app_context.push()
@@ -158,7 +160,7 @@ class ApiEndpointsTestCase(unittest.TestCase):
         execute_response = self.client.post(f'/api/execucoes/casos/{caso_id}/execute')
         self.assertEqual(execute_response.status_code, 201)
         payload = execute_response.get_json()
-        self.assertEqual(payload['status'], 'success')
+        self.assertEqual(payload['status'], 'sucesso')
         self.assertIn('rpa_id', payload)
         self.assertEqual(payload['caso_teste_id'], caso_id)
 
@@ -166,7 +168,7 @@ class ApiEndpointsTestCase(unittest.TestCase):
         execution_id = payload['id']
         exec_detail = self.client.get(f'/api/execucoes/{execution_id}')
         self.assertEqual(exec_detail.status_code, 200)
-        self.assertEqual(exec_detail.get_json()['status'], 200)
+        self.assertEqual(exec_detail.get_json().get('status'), 'sucesso')
 
 
 if __name__ == '__main__':

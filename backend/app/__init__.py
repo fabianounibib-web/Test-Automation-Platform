@@ -24,10 +24,12 @@ def _optional_jwt_required(*args, **kwargs):
         def wrapper(*f_args, **f_kwargs):
             try:
                 _original_verify_jwt_in_request(optional=True)
+                identity = _original_get_jwt_identity()
+            except RuntimeError:
+                identity = None
             except Exception:
-                pass
+                identity = None
 
-            identity = _original_get_jwt_identity()
             if identity is None:
                 from app.database.models import User
 

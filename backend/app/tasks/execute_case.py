@@ -1,13 +1,45 @@
 from datetime import datetime
+from flask import current_app
+from celery import Celery
 from app import db
+from app.core.connectors import execute_connector_flow
 from app.database.models import Execucao, CasoTeste, Log, Evidencia, Conector
 
 
 # Lazy import to avoid circular imports
 def get_celery():
-    """Get celery instance lazily."""
-    from app.celery_app import celery
-    return celery
+    """Get celery instance lazily using the current Flask app config."""
+    try:
+        app = current_app._get_current_object()
+        broker_url = app.config.get('CELERY_BROKER_URL') or app.config.get('REDIS_URL')
+        backend_url = app.config.get('CELERY_RESULT_BACKEND') or app.config.get('REDIS_URL')
+
+        celery = Celery(
+            app.import_name,
+            broker=broker_url,
+            backend=backend_url,
+        )
+        celery_conf = {
+            key[len('CELERY_'):].lower(): value
+            for key, value in app.config.items()
+            if key.startswith('CELERY_')
+        }
+        celery.conf.update(celery_conf)
+        celery.conf.task_always_eager = app.config.get('CELERY_TASK_ALWAYS_EAGER', False)
+        celery.conf.task_eager_propagates = app.config.get('CELERY_TASK_EAGER_PROPAGATES', False)
+
+        TaskBase = celery.Task
+
+        class ContextTask(TaskBase):
+            def __call__(self, *args, **kwargs):
+                with app.app_context():
+                    return TaskBase.__call__(self, *args, **kwargs)
+
+        celery.Task = ContextTask
+        return celery
+    except RuntimeError:
+        from app.celery_app import celery
+        return celery
 
 
 execute_test_case_task = None

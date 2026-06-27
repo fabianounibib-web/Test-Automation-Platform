@@ -98,3 +98,109 @@ backend/
 - Implementar telas de listagem e detalhes para casos e execuções.
 - Criar camada de serviços no frontend para consumo das APIs.
 - Adicionar testes automatizados para backend e frontend.
+## 9. Como o robô sabe interagir com sistemas externos
+O robô não deve tentar adivinhar sozinho os caminhos, labels, campos e botões de um portal externo. A plataforma precisa ensiná-lo a operar cada sistema por meio de conectores configuráveis. O conector é o artefato que descreve como acessar um sistema, autenticar-se, navegar até uma área funcional e executar uma ação, como baixar um histórico de pagamentos.
+
+### 9.1 Estratégias possíveis
+A plataforma pode suportar quatro estratégias de automação, com níveis diferentes de flexibilidade e robustez:
+
+1. **Robô programado**: um desenvolvedor cria uma automação específica em Playwright, Selenium ou ferramenta equivalente. A plataforma apenas agenda, executa e registra evidências desse robô. É a opção mais robusta para fluxos críticos, mas exige manutenção técnica.
+2. **Mapeamento visual**: o usuário cadastra o sistema e, em um assistente, aponta visualmente quais elementos representam usuário, senha, botão de login, aba de faturas e botão de download. A plataforma salva seletores e metadados reutilizáveis.
+3. **Gravação de fluxo**: o usuário clica em "Gravar Automação", executa o processo manualmente uma vez, e a plataforma registra uma sequência de ações reproduzível.
+4. **IA assistida**: modelos de linguagem e visão podem ajudar a identificar campos e botões a partir da página, mas devem atuar como camada auxiliar com validação, não como única fonte de decisão para processos críticos.
+
+### 9.2 Abordagem recomendada para produto
+Para esta plataforma, a recomendação é combinar **mapeamento visual** e **gravação de fluxo**. O usuário de negócio cadastra um sistema, abre um navegador controlado pela plataforma, realiza o processo uma vez e salva o resultado como um conector inteligente.
+
+Exemplo de cadastro:
+
+```text
+Nome: Portal Financeiro
+URL: https://xpto.com
+Credenciais: usuário e senha armazenados de forma segura
+Processo: baixar histórico de pagamentos
+```
+
+Durante a gravação, a plataforma transforma as interações em passos estruturados:
+
+```json
+[
+  {
+    "action": "goto",
+    "url": "https://xpto.com"
+  },
+  {
+    "action": "fill",
+    "target": "usuario",
+    "selector": "#usuario",
+    "value": "${usuario}"
+  },
+  {
+    "action": "fill",
+    "target": "senha",
+    "selector": "#senha",
+    "value": "${senha}"
+  },
+  {
+    "action": "click",
+    "target": "entrar",
+    "selector": "#entrar"
+  },
+  {
+    "action": "click",
+    "target": "faturas",
+    "selector": "#menu_faturas"
+  },
+  {
+    "action": "click",
+    "target": "historico_pagamentos",
+    "selector": "#historico"
+  },
+  {
+    "action": "download",
+    "target": "arquivo_historico",
+    "selector": "#download"
+  }
+]
+```
+
+Assim, o motor de execução não precisa conhecer previamente o site `xpto.com`; ele interpreta o fluxo salvo no conector e executa os passos com os dados seguros do cliente.
+
+### 9.3 Modelo conceitual do conector
+Um conector inteligente deve conter, no mínimo:
+
+- identificação do sistema: nome, URL base, cliente e ambiente;
+- credenciais referenciadas por variáveis seguras, nunca salvas em texto aberto no fluxo;
+- lista ordenada de ações: `goto`, `fill`, `click`, `select`, `wait`, `assert`, `download`;
+- seletores principais e alternativas de localização;
+- regras de espera e timeout;
+- critérios de sucesso, como arquivo baixado, mensagem exibida ou registro encontrado;
+- política de evidências, como screenshots, logs e arquivos coletados;
+- versão do conector para permitir manutenção controlada.
+
+### 9.4 Resolução inteligente de elementos
+Como portais externos mudam com o tempo, a plataforma deve evitar depender de um único seletor frágil. Cada elemento mapeado deve guardar múltiplas pistas de identificação:
+
+- seletor CSS preferencial;
+- ID e atributo `name`;
+- texto visível;
+- label associada;
+- papel acessível, como botão, link ou campo;
+- XPath como último recurso;
+- posição relativa ou contexto visual, apenas como fallback.
+
+Na execução, o motor tenta localizar o elemento em ordem de confiabilidade. Se o seletor principal falhar, ele tenta as alternativas antes de marcar a execução como erro. Quando a alternativa funcionar, a plataforma pode sugerir atualização do conector.
+
+### 9.5 Fluxo operacional sugerido
+1. O usuário cadastra o sistema externo.
+2. O usuário escolhe criar um conector por gravação ou importar um robô programado.
+3. A plataforma abre uma sessão de navegador instrumentada.
+4. O usuário executa o processo uma vez.
+5. A plataforma salva os passos, seletores, variáveis e critérios de sucesso.
+6. Um validador executa o fluxo em modo teste.
+7. Após aprovação, o conector fica disponível para roteiros e casos de teste.
+8. Em cada execução, a plataforma registra logs, evidências e arquivos baixados.
+
+### 9.6 Implicação arquitetural
+A plataforma não deve vender apenas "robôs" isolados. Ela deve tratar cada integração como um **conector inteligente versionado**, capaz de ser gravado, validado, executado, monitorado e mantido. Essa decisão preserva a robustez de automações programadas, reduz a barreira para usuários não técnicos e mantém a arquitetura preparada para incorporar IA de forma segura no futuro.
+

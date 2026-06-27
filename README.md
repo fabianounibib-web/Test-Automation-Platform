@@ -143,6 +143,32 @@ Passo 4: Clicar em Entrar
 Resultado esperado: O sistema redireciona para a área principal
 ```
 
+
+## Conectores inteligentes
+
+A plataforma não espera que o robô "adivinhe" como navegar em um sistema externo. Cada portal deve ser representado por um conector inteligente, que ensina ao motor de automação quais campos preencher, quais botões clicar, quais telas acessar e quais evidências coletar.
+
+O caminho recomendado para o produto é combinar:
+
+- **Mapeamento visual**: o usuário aponta, em um assistente, os campos de usuário, senha, login, faturas e download.
+- **Gravação de fluxo**: o usuário executa o processo manualmente uma vez enquanto a plataforma registra os passos.
+- **Execução interpretada**: o backend salva a sequência de ações e o motor RPA reproduz o fluxo quando um caso de teste solicitar aquele processo.
+
+Exemplo simplificado de fluxo salvo:
+
+```json
+[
+  { "action": "goto", "url": "https://xpto.com" },
+  { "action": "fill", "selector": "#usuario", "value": "${usuario}" },
+  { "action": "fill", "selector": "#senha", "value": "${senha}" },
+  { "action": "click", "selector": "#entrar" },
+  { "action": "click", "selector": "#menu_faturas" },
+  { "action": "download", "selector": "#download" }
+]
+```
+
+Quando o portal muda, o conector deve usar uma camada de resolução inteligente de elementos, tentando localizar os componentes por CSS, ID, `name`, texto visível, label, papel acessível e XPath como fallback. Mais detalhes estão descritos em `ARCHITECTURE.md`.
+
 ## Autenticação
 
 A API usa JWT para proteger os endpoints. O token é retornado no login e deve ser enviado no cabeçalho de autorização nas requisições subsequentes.
